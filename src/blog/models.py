@@ -2,8 +2,8 @@ from django.db import models
 from pgvector.django import VectorField
 
 
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_LENGTH = 1536
+EMBEDDING_MODEL = "embedding-001"
+EMBEDDING_LENGTH = 384
 # Create your models here.
 class BlogPost(models.Model):
     
@@ -13,5 +13,13 @@ class BlogPost(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     
     # embedding's 
-    embedding = VectorField(dimensions=384, null=True)
+    embedding = VectorField(dimensions=768, null=True)
+    
+    # delete operations:
+    can_delete = models.BooleanField(default=False, help_text='Used in jupyter notebook')
+    
+    def get_embedding_text_raw(self):
+        return self.content
+    
+    
     
