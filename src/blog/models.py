@@ -1,6 +1,12 @@
 from django.db import models
 # from pgvector.django import VectorField  # Temporarily commented out for SQLite compatibility
 from . import services
+from django.apps import apps
+
+# from PgVector Imports
+from pgvector.django import CosineDistance
+from django.db.models import F
+
 
 # EMBEDDING_MODEL = "embedding-001"
 EMBEDDING_LENGTH = services.EMBEDDING_LENGTH
@@ -44,5 +50,19 @@ class BlogPost(models.Model):
     def get_embedding_text_raw(self):
         return self.content
     
+    def get_query_embedding(self, text):
+        # get the embedding for the query:
+        return services.get_embedding(text)
     
-    
+    def search_posts(self, query, limit = 2):
+        BlogPost = apps.get_model(app_label  = 'blog',
+                                  model_name = 'BlogPost')
+        
+        query_embedding = self.get_query_embedding(query)
+        
+        qs = BlogPost.objects.annotate(
+             distance   = CosineDistance('embedding', query_embedding),
+             similarity = 1 - F("distance")                             
+        ).order_by("-distance")[:limit]
+
+        return qs
